@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>BotLogic Robot</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+text-align:center;
+font-family:Arial;
+}
+
+h1{
+color:#22c55e;
+}
+
+#game{
+width:420px;
+height:420px;
+margin:auto;
+display:grid;
+grid-template-columns:repeat(10,40px);
+grid-template-rows:repeat(10,40px);
+gap:2px;
+}
+
+.cell{
+width:40px;
+height:40px;
+background:#1e293b;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+}
+
+.wall{
+background:#334155;
+}
+
+#info{
+margin:10px;
+font-size:18px;
+}
+
+button{
+padding:10px 20px;
+font-size:16px;
+margin:10px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🤖 BotLogic Robot</h1>
+
+<div id="info">
+Level: <span id="level">1</span> |
+Điểm: <span id="score">0</span>
+</div>
+
+<div id="game"></div>
+
+<button onclick="restart()">Chơi lại</button>
+
+<p>Dùng phím ⬆ ⬇ ⬅ ➡ để điều khiển robot</p>
+
+<script>
+
+let size=10
+let robot={x:0,y:0}
+let goal={x:9,y:9}
+let walls=[]
+
+let level=1
+let score=0
+
+const game=document.getElementById("game")
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+function playTone(freq,time){
+
+let osc=audioCtx.createOscillator()
+let gain=audioCtx.createGain()
+
+osc.frequency.value=freq
+osc.type="square"
+
+osc.connect(gain)
+gain.connect(audioCtx.destination)
+
+osc.start()
+
+gain.gain.setValueAtTime(0.2,audioCtx.currentTime)
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+time)
+
+osc.stop(audioCtx.currentTime+time)
+
+}
+
+function backgroundMusic(){
+
+setInterval(()=>{
+playTone(220,0.2)
+setTimeout(()=>playTone(330,0.2),200)
+},1200)
+
+}
+
+function winSound(){
+playTone(600,0.2)
+setTimeout(()=>playTone(800,0.2),150)
+setTimeout(()=>playTone(1000,0.3),300)
+}
+
+function loseSound(){
+playTone(200,0.4)
+setTimeout(()=>playTone(120,0.5),300)
+}
+
+function createWalls(){
+
+walls=[]
+
+for(let i=0;i<level+5;i++){
+
+let wx=Math.floor(Math.random()*size)
+let wy=Math.floor(Math.random()*size)
+
+if((wx!=0||wy!=0)&&(wx!=9||wy!=9)){
+walls.push({x:wx,y:wy})
+}
+
+}
+
+}
+
+function draw(){
+
+game.innerHTML=""
+
+for(let y=0;y<size;y++){
+for(let x=0;x<size;x++){
+
+let cell=document.createElement("div")
+cell.classList.add("cell")
+
+let content=""
+
+walls.forEach(w=>{
+if(w.x==x && w.y==y){
+cell.classList.add("wall")
+content="⬛"
+}
+})
+
+if(goal.x==x && goal.y==y){
+content="⚡"
+}
+
+if(robot.x==x && robot.y==y){
+content="🤖"
+}
+
+cell.innerHTML=content
+
+game.appendChild(cell)
+
+}
+}
+
+document.getElementById("level").innerText=level
+document.getElementById("score").innerText=score
+
+}
+
+function move(dx,dy){
+
+let nx=robot.x+dx
+let ny=robot.y+dy
+
+if(nx<0||ny<0||nx>=size||ny>=size) return
+
+for(let w of walls){
+if(w.x==nx && w.y==ny){
+loseSound()
+alert("💥 Robot đụng tường! Game Over\nĐiểm: "+score)
+restart()
+return
+}
+}
+
+robot.x=nx
+robot.y=ny
+
+playTone(400,0.05)
+
+if(robot.x==goal.x && robot.y==goal.y){
+
+score+=10
+level++
+
+robot={x:0,y:0}
+
+winSound()
+
+createWalls()
+
+alert("🎉 Robot đã sạc năng lượng! Qua level "+(level-1))
+
+}
+
+draw()
+
+}
+
+document.addEventListener("keydown",e=>{
+
+if(e.key=="ArrowUp") move(0,-1)
+if(e.key=="ArrowDown") move(0,1)
+if(e.key=="ArrowLeft") move(-1,0)
+if(e.key=="ArrowRight") move(1,0)
+
+})
+
+function restart(){
+
+level=1
+score=0
+robot={x:0,y:0}
+
+createWalls()
+draw()
+
+}
+
+createWalls()
+draw()
+backgroundMusic()
+
+</script>
+
+</body>
+</html>

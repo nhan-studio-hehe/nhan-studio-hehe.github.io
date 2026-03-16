@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Moon Runner</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
+
+#game{
+width:100vw;
+height:100vh;
+position:relative;
+}
+
+#moon{
+width:40px;
+height:40px;
+background:white;
+border-radius:50%;
+position:absolute;
+bottom:80px;
+left:120px;
+}
+
+.obstacle{
+position:absolute;
+bottom:80px;
+right:-60px;
+}
+
+.rock{
+width:30px;
+height:50px;
+background:gray;
+}
+
+.alien{
+width:35px;
+height:35px;
+background:lime;
+border-radius:50%;
+bottom:120px;
+}
+
+.star{
+position:absolute;
+width:3px;
+height:3px;
+background:white;
+}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+font-size:22px;
+}
+
+#menu{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+display:none;
+}
+
+button{
+padding:10px 20px;
+font-size:18px;
+cursor:pointer;
+margin-top:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<div id="moon"></div>
+
+<div id="ui">
+Điểm: <span id="score">0</span><br>
+Kỷ lục: <span id="best">0</span>
+</div>
+
+<div id="menu">
+<h1>Game Over</h1>
+<p>Điểm hiện tại: <span id="finalScore"></span></p>
+<p>Kỷ lục: <span id="bestScore"></span></p>
+<button onclick="restart()">Chơi lại</button>
+</div>
+
+</div>
+
+<script>
+
+let moon=document.getElementById("moon")
+let scoreText=document.getElementById("score")
+let bestText=document.getElementById("best")
+let menu=document.getElementById("menu")
+let finalScore=document.getElementById("finalScore")
+let bestScore=document.getElementById("bestScore")
+
+let jumping=false
+let score=0
+let gameOver=false
+let speed=6
+
+let best=localStorage.getItem("moonBest")||0
+bestText.innerText=best
+
+function jump(){
+
+if(jumping||gameOver)return
+jumping=true
+
+let height=0
+
+let up=setInterval(()=>{
+
+height+=5
+moon.style.bottom=80+height+"px"
+
+if(height>=120){
+
+clearInterval(up)
+
+let down=setInterval(()=>{
+
+height-=5
+moon.style.bottom=80+height+"px"
+
+if(height<=0){
+clearInterval(down)
+jumping=false
+}
+
+},20)
+
+}
+
+},20)
+
+}
+
+document.addEventListener("keydown",jump)
+
+function spawnObstacle(){
+
+if(gameOver)return
+
+let obstacle=document.createElement("div")
+obstacle.classList.add("obstacle")
+
+if(Math.random()>0.5){
+obstacle.classList.add("rock")
+}else{
+obstacle.classList.add("alien")
+}
+
+document.getElementById("game").appendChild(obstacle)
+
+let pos=window.innerWidth
+
+let move=setInterval(()=>{
+
+if(gameOver){
+clearInterval(move)
+obstacle.remove()
+return
+}
+
+pos-=speed
+obstacle.style.right=(window.innerWidth-pos)+"px"
+
+let moonRect=moon.getBoundingClientRect()
+let obsRect=obstacle.getBoundingClientRect()
+
+if(
+moonRect.left<obsRect.right &&
+moonRect.right>obsRect.left &&
+moonRect.bottom>obsRect.top &&
+moonRect.top<obsRect.bottom
+){
+endGame()
+}
+
+if(pos<-60){
+clearInterval(move)
+obstacle.remove()
+
+score++
+scoreText.innerText=score
+
+if(score%10==0){
+speed+=1
+}
+
+}
+
+},20)
+
+}
+
+function createStar(){
+
+let star=document.createElement("div")
+star.classList.add("star")
+
+star.style.left=Math.random()*window.innerWidth+"px"
+star.style.top=Math.random()*window.innerHeight+"px"
+
+document.getElementById("game").appendChild(star)
+
+setTimeout(()=>{
+star.remove()
+},4000)
+
+}
+
+setInterval(createStar,200)
+
+function endGame(){
+
+gameOver=true
+
+if(score>best){
+best=score
+localStorage.setItem("moonBest",best)
+}
+
+finalScore.innerText=score
+bestScore.innerText=best
+bestText.innerText=best
+
+menu.style.display="block"
+
+}
+
+function restart(){
+location.reload()
+}
+
+setInterval(spawnObstacle,1800)
+
+</script>
+
+</body>
+</html>

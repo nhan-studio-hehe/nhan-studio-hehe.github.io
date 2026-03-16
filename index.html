@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nhân Game Hub</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:black;
+color:white;
+overflow:hidden;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-1;
+}
+
+.container{
+text-align:center;
+margin-top:80px;
+}
+
+h1{
+font-size:55px;
+margin-bottom:10px;
+}
+
+.score{
+margin-bottom:30px;
+opacity:0.8;
+}
+
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,220px);
+gap:25px;
+justify-content:center;
+}
+
+.card{
+background:rgba(255,255,255,0.05);
+border-radius:20px;
+padding:30px;
+cursor:pointer;
+transition:0.25s;
+backdrop-filter:blur(10px);
+}
+
+.card:hover{
+transform:scale(1.15);
+background:#00adb5;
+}
+
+.card h2{
+margin:10px 0;
+}
+
+footer{
+margin-top:60px;
+opacity:0.6;
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container">
+
+<h1>🎮 Nhân Game Hub</h1>
+
+<div class="score">
+Best Score: <span id="best">0</span>
+</div>
+
+<div class="menu">
+
+<div class="card" onclick="play('moon/moon.html')">
+🌙
+<h2>Moon</h2>
+</div>
+
+<div class="card" onclick="play('flappybird/flappybird.html')">
+🐦
+<h2>Flappy Bird</h2>
+</div>
+
+<div class="card" onclick="play('snake/snake.html')">
+🐍
+<h2>Snake</h2>
+</div>
+
+<div class="card" onclick="play('mine/mine.html')">
+💣
+<h2>Mine</h2>
+</div>
+
+<div class="card" onclick="play('meteor/meteor.html')">
+☄️
+<h2>Meteor</h2>
+</div>
+
+</div>
+
+<footer>
+Made by Nhân
+</footer>
+
+</div>
+
+<audio autoplay loop>
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7f0d7fdf50.mp3">
+</audio>
+
+<script>
+
+function play(url){
+window.location.href=url
+}
+
+let best=localStorage.getItem("bestScore")||0
+document.getElementById("best").innerText=best
+
+const canvas=document.getElementById("bg")
+const ctx=canvas.getContext("2d")
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+let stars=[]
+
+for(let i=0;i<120;i++){
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+size:Math.random()*2,
+speed:Math.random()*1
+})
+}
+
+function draw(){
+
+ctx.fillStyle="black"
+ctx.fillRect(0,0,canvas.width,canvas.height)
+
+ctx.fillStyle="white"
+
+stars.forEach(s=>{
+
+ctx.fillRect(s.x,s.y,s.size,s.size)
+
+s.y+=s.speed
+
+if(s.y>canvas.height){
+s.y=0
+s.x=Math.random()*canvas.width
+}
+
+})
+
+requestAnimationFrame(draw)
+
+}
+
+draw()
+
+</script>
+
+</body>
+</html>

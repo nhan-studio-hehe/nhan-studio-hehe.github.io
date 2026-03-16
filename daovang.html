@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Game Đào Vàng</title>
+
+<style>
+body{
+text-align:center;
+font-family:Arial;
+}
+
+canvas{
+background:#bfe3ff;
+display:block;
+margin:auto;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>GAME ĐÀO VÀNG</h2>
+<p>Nhấn SPACE để thả móc</p>
+
+<canvas id="game" width="800" height="500"></canvas>
+
+<script>
+
+let canvas = document.getElementById("game");
+let ctx = canvas.getContext("2d");
+
+let angle = 0;
+let direction = 1;
+let hookLength = 60;
+let dropping = false;
+
+let score = 0;
+let time = 60;
+let level = 1;
+
+let items=[];
+
+function spawnItems(){
+
+items=[];
+
+let goldCount = 3 + level;
+let rockCount = 2 + Math.floor(level/2);
+
+for(let i=0;i<goldCount;i++){
+
+items.push({
+x:Math.random()*650+50,
+y:Math.random()*200+250,
+r:20,
+type:"gold",
+value:100
+});
+
+}
+
+for(let i=0;i<rockCount;i++){
+
+items.push({
+x:Math.random()*650+50,
+y:Math.random()*200+250,
+r:25,
+type:"rock",
+value:20
+});
+
+}
+
+}
+
+spawnItems();
+
+document.addEventListener("keydown",function(e){
+if(e.code=="Space" && !dropping){
+dropping=true;
+}
+});
+
+setInterval(function(){
+if(time>0){
+time--;
+}
+},1000);
+
+function drawGold(x,y,size){
+
+ctx.fillStyle="gold";
+
+ctx.beginPath();
+
+ctx.moveTo(x-size,y);
+ctx.lineTo(x+size*0.6,y-size*0.5);
+ctx.lineTo(x+size,y+size*0.3);
+ctx.lineTo(x+size*0.4,y+size);
+ctx.lineTo(x-size*0.6,y+size*0.6);
+
+ctx.closePath();
+ctx.fill();
+
+}
+
+function drawRock(x,y,size){
+
+ctx.fillStyle="gray";
+
+ctx.beginPath();
+ctx.arc(x,y,size,0,Math.PI*2);
+ctx.fill();
+
+ctx.strokeStyle="#555";
+ctx.beginPath();
+ctx.moveTo(x-size/2,y);
+ctx.lineTo(x+size/3,y+size/3);
+ctx.stroke();
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,800,500);
+
+ctx.fillStyle="black";
+ctx.font="20px Arial";
+
+ctx.fillText("Score: "+score,10,25);
+ctx.fillText("Time: "+time,10,50);
+ctx.fillText("Level: "+level,10,75);
+
+if(time<=0){
+
+ctx.font="50px Arial";
+ctx.fillText("GAME OVER",260,250);
+
+return;
+
+}
+
+if(!dropping){
+
+angle+=direction*(0.015 + level*0.005);
+
+if(angle>1 || angle<-1){
+direction*=-1;
+}
+
+}else{
+
+hookLength+=8;
+
+}
+
+let hookX=400+hookLength*Math.sin(angle);
+let hookY=80+hookLength*Math.cos(angle);
+
+ctx.beginPath();
+ctx.moveTo(400,80);
+ctx.lineTo(hookX,hookY);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.arc(hookX,hookY,7,0,Math.PI*2);
+ctx.fill();
+
+for(let item of items){
+
+if(item.type=="gold"){
+drawGold(item.x,item.y,item.r);
+}
+
+if(item.type=="rock"){
+drawRock(item.x,item.y,item.r);
+}
+
+let dx=hookX-item.x;
+let dy=hookY-item.y;
+
+let dist=Math.sqrt(dx*dx+dy*dy);
+
+if(dist<item.r){
+
+score+=item.value;
+
+items.splice(items.indexOf(item),1);
+
+hookLength=60;
+dropping=false;
+
+}
+
+}
+
+if(items.length==0){
+
+level++;
+
+spawnItems();
+
+}
+
+if(hookY>500){
+
+hookLength=60;
+dropping=false;
+
+}
+
+requestAnimationFrame(draw);
+
+}
+
+draw();
+
+</script>
+
+</body>
+</html>

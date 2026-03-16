@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+
+<style>
+
+body{
+margin:0;
+background:#020617;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+font-family:Arial;
+color:white;
+}
+
+canvas{
+background:#020617;
+border:3px solid #22c55e;
+border-radius:10px;
+box-shadow:0 0 20px #22c55e;
+}
+
+h1{
+margin:5px;
+}
+
+#score{
+margin:10px;
+font-size:20px;
+}
+
+.panel{
+position:absolute;
+background:#000000dd;
+padding:30px;
+border-radius:10px;
+text-align:center;
+}
+
+button{
+padding:10px 20px;
+margin:5px;
+font-size:16px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:#22c55e;
+color:white;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+input{
+padding:8px;
+border-radius:6px;
+border:none;
+margin-bottom:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🐍 Snake Game</h1>
+<div id="score">Điểm: 0</div>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="menu" class="panel">
+
+<h2>Nhập tên</h2>
+<input id="playerName" placeholder="Tên người chơi">
+
+<h3>Chọn chế độ</h3>
+
+<button onclick="startGame('practice')">Luyện tập</button> <button onclick="startGame('easy')">Dễ</button> <button onclick="startGame('medium')">Trung bình</button> <button onclick="startGame('hard')">Khó</button>
+
+<button onclick="showLeaderboard()">Bảng xếp hạng</button>
+
+</div>
+
+<div id="gameover" class="panel" style="display:none">
+
+<h2>💀 Game Over</h2>
+<p>Điểm: <span id="final"></span></p>
+
+<button onclick="showLeaderboard()">Leaderboard</button> <button onclick="showMenu()">Menu</button>
+
+</div>
+
+<div id="leaderboard" class="panel" style="display:none">
+
+<h2>🏆 Leaderboard</h2>
+<div id="board"></div>
+
+<button onclick="showMenu()">Quay lại</button>
+
+</div>
+
+<script>
+
+const canvas=document.getElementById("game")
+const ctx=canvas.getContext("2d")
+
+const size=20
+
+let snake=[]
+let dir={x:1,y:0}
+let food
+
+let score=0
+let player=""
+let mode="easy"
+
+let cellsPerSecond=1
+let speed=1000
+let loop
+
+let practice=false
+
+function startGame(level){
+
+player=document.getElementById("playerName").value
+
+if(player===""){
+alert("Vui lòng nhập tên!")
+return
+}
+
+mode=level
+practice=(level==="practice")
+
+if(level==="practice") cellsPerSecond=1
+if(level==="easy") cellsPerSecond=1
+if(level==="medium") cellsPerSecond=3
+if(level==="hard") cellsPerSecond=5
+
+speed=1000/cellsPerSecond
+
+snake=[
+{x:5,y:10},
+{x:4,y:10},
+{x:3,y:10}
+]
+
+dir={x:1,y:0}
+
+food=randomFood()
+
+score=0
+updateScore()
+
+document.getElementById("menu").style.display="none"
+document.getElementById("leaderboard").style.display="none"
+document.getElementById("gameover").style.display="none"
+
+clearInterval(loop)
+loop=setInterval(gameLoop,speed)
+
+}
+
+function randomFood(){
+
+return{
+x:Math.floor(Math.random()*20),
+y:Math.floor(Math.random()*20)
+}
+
+}
+
+function gameLoop(){
+
+moveSnake()
+
+if(checkCollision()){
+gameOver()
+return
+}
+
+draw()
+
+}
+
+function moveSnake(){
+
+let head={
+x:snake[0].x+dir.x,
+y:snake[0].y+dir.y
+}
+
+if(practice){
+
+if(head.x<0) head.x=19
+if(head.x>19) head.x=0
+if(head.y<0) head.y=19
+if(head.y>19) head.y=0
+
+}
+
+snake.unshift(head)
+
+if(head.x===food.x && head.y===food.y){
+
+score++
+updateScore()
+
+food=randomFood()
+
+if(score%2===0){
+
+cellsPerSecond++
+speed=1000/cellsPerSecond
+
+clearInterval(loop)
+loop=setInterval(gameLoop,speed)
+
+}
+
+}else{
+
+snake.pop()
+
+}
+
+}
+
+function checkCollision(){
+
+let head=snake[0]
+
+if(!practice){
+
+if(head.x<0||head.y<0||head.x>=20||head.y>=20)
+return true
+
+}
+
+for(let i=1;i<snake.length;i++){
+
+if(head.x===snake[i].x && head.y===snake[i].y)
+return true
+
+}
+
+return false
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,400,400)
+
+drawFood()
+drawSnake()
+
+}
+
+function drawSnake(){
+
+snake.forEach((s,i)=>{
+
+let x=s.x*size + size/2
+let y=s.y*size + size/2
+
+ctx.fillStyle=i===0?"#4ade80":"#22c55e"
+
+ctx.beginPath()
+ctx.arc(x,y,9,0,Math.PI*2)
+ctx.fill()
+
+if(i===0){
+
+ctx.fillStyle="white"
+
+ctx.beginPath()
+ctx.arc(x-4,y-3,2.5,0,Math.PI*2)
+ctx.fill()
+
+ctx.beginPath()
+ctx.arc(x+4,y-3,2.5,0,Math.PI*2)
+ctx.fill()
+
+ctx.fillStyle="black"
+
+ctx.beginPath()
+ctx.arc(x-4,y-3,1.2,0,Math.PI*2)
+ctx.fill()
+
+ctx.beginPath()
+ctx.arc(x+4,y-3,1.2,0,Math.PI*2)
+ctx.fill()
+
+ctx.strokeStyle="red"
+ctx.lineWidth=2
+
+ctx.beginPath()
+ctx.moveTo(x,y+8)
+ctx.lineTo(x,y+14)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(x,y+14)
+ctx.lineTo(x-3,y+18)
+
+ctx.moveTo(x,y+14)
+ctx.lineTo(x+3,y+18)
+ctx.stroke()
+
+}
+
+})
+
+}
+
+function drawFood(){
+
+let x=food.x*size + size/2
+let y=food.y*size + size/2
+
+// đầu
+ctx.fillStyle="#bdbdbd"
+
+ctx.beginPath()
+ctx.arc(x,y,8,0,Math.PI*2)
+ctx.fill()
+
+// tai ngoài
+ctx.beginPath()
+ctx.arc(x-7,y-7,5,0,Math.PI*2)
+ctx.arc(x+7,y-7,5,0,Math.PI*2)
+ctx.fill()
+
+// tai trong
+ctx.fillStyle="#fca5a5"
+
+ctx.beginPath()
+ctx.arc(x-7,y-7,3,0,Math.PI*2)
+ctx.arc(x+7,y-7,3,0,Math.PI*2)
+ctx.fill()
+
+// mắt
+ctx.fillStyle="#333"
+
+ctx.beginPath()
+ctx.arc(x-3,y-1,1.8,0,Math.PI*2)
+ctx.arc(x+3,y-1,1.8,0,Math.PI*2)
+ctx.fill()
+
+// mũi
+ctx.beginPath()
+ctx.arc(x,y+2,1.5,0,Math.PI*2)
+ctx.fill()
+
+// miệng
+ctx.strokeStyle="#333"
+
+ctx.beginPath()
+ctx.moveTo(x-2,y+4)
+ctx.quadraticCurveTo(x,y+6,x+2,y+4)
+ctx.stroke()
+
+// răng
+ctx.fillStyle="white"
+ctx.fillRect(x-1,y+4,1.5,3)
+ctx.fillRect(x+0.5,y+4,1.5,3)
+
+// râu
+ctx.strokeStyle="#333"
+
+ctx.beginPath()
+
+ctx.moveTo(x-4,y+2)
+ctx.lineTo(x-9,y+1)
+
+ctx.moveTo(x-4,y+3)
+ctx.lineTo(x-9,y+4)
+
+ctx.moveTo(x+4,y+2)
+ctx.lineTo(x+9,y+1)
+
+ctx.moveTo(x+4,y+3)
+ctx.lineTo(x+9,y+4)
+
+ctx.stroke()
+
+}
+
+function updateScore(){
+
+document.getElementById("score").innerText="Điểm: "+score
+
+}
+
+function gameOver(){
+
+clearInterval(loop)
+
+document.getElementById("final").innerText=score
+
+saveScore()
+
+document.getElementById("gameover").style.display="block"
+
+}
+
+function saveScore(){
+
+let data=JSON.parse(localStorage.getItem("snakeRank"))||[]
+
+data.push({
+name:player,
+score:score,
+mode:mode
+})
+
+data.sort((a,b)=>b.score-a.score)
+
+data=data.slice(0,20)
+
+localStorage.setItem("snakeRank",JSON.stringify(data))
+
+}
+
+function showLeaderboard(){
+
+let data=JSON.parse(localStorage.getItem("snakeRank"))||[]
+
+let html=""
+
+data.forEach((p,i)=>{
+
+let medal=""
+
+if(i===0) medal="🥇"
+else if(i===1) medal="🥈"
+else if(i===2) medal="🥉"
+
+html+=`<p>${medal} ${i+1}. ${p.name} - ${p.score} (${p.mode})</p>`
+
+})
+
+document.getElementById("board").innerHTML=html
+
+document.getElementById("menu").style.display="none"
+document.getElementById("leaderboard").style.display="block"
+
+}
+
+function showMenu(){
+
+document.getElementById("menu").style.display="block"
+document.getElementById("leaderboard").style.display="none"
+document.getElementById("gameover").style.display="none"
+
+}
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="ArrowLeft" && dir.x===0) dir={x:-1,y:0}
+if(e.key==="ArrowRight" && dir.x===0) dir={x:1,y:0}
+if(e.key==="ArrowUp" && dir.y===0) dir={x:0,y:-1}
+if(e.key==="ArrowDown" && dir.y===0) dir={x:0,y:1}
+
+})
+
+</script>
+
+</body>
+</html>
