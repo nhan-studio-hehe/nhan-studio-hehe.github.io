@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Game Né Thiên Thạch</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
+
+/* nền sao */
+#stars{
+position:fixed;
+width:100%;
+height:100%;
+background:radial-gradient(white 1px, transparent 1px);
+background-size:40px 40px;
+}
+
+/* tàu */
+#player{
+position:absolute;
+bottom:60px;
+left:50%;
+transform:translateX(-50%);
+font-size:50px;
+}
+
+/* thiên thạch */
+.meteor{
+position:absolute;
+font-size:35px;
+}
+
+/* bảng điểm */
+#ui{
+position:fixed;
+top:10px;
+left:10px;
+background:rgba(0,0,0,0.5);
+padding:10px 15px;
+border-radius:10px;
+font-size:20px;
+}
+
+/* start */
+#start{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000c;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+font-size:35px;
+}
+
+/* game over */
+#gameover{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+font-size:30px;
+}
+
+button{
+padding:12px 25px;
+font-size:20px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="stars"></div>
+
+<div id="ui">
+⭐ Điểm: <span id="score">0</span> |
+🚀 Level: <span id="level">1</span>
+</div>
+
+<div id="player">🚀</div>
+
+<div id="start">
+🚀 GAME NÉ THIÊN THẠCH<br><br>
+<button onclick="startGame()">Bắt đầu</button>
+</div>
+
+<div id="gameover">
+💥 Game Over<br>
+Điểm: <span id="finalScore"></span><br><br>
+<button onclick="restart()">Chơi lại</button>
+</div>
+
+<!-- nhạc nền -->
+<audio id="music" loop>
+<source src="nhacnen.mp3" type="audio/mpeg">
+</audio>
+
+<!-- âm thanh nổ -->
+<audio id="boom">
+<source src="boom.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+let player=document.getElementById("player")
+let scoreEl=document.getElementById("score")
+let levelEl=document.getElementById("level")
+
+let x=window.innerWidth/2
+let score=0
+let level=1
+let speed=3
+let playing=false
+
+function startGame(){
+
+document.getElementById("start").style.display="none"
+
+let music=document.getElementById("music")
+music.volume=0.5
+music.play()
+
+playing=true
+
+}
+
+document.addEventListener("keydown",e=>{
+
+if(!playing) return
+
+if(e.key=="ArrowLeft") x-=40
+if(e.key=="ArrowRight") x+=40
+
+player.style.left=x+"px"
+
+})
+
+function createMeteor(){
+
+let m=document.createElement("div")
+m.className="meteor"
+m.innerHTML="☄️"
+
+m.style.left=Math.random()*window.innerWidth+"px"
+m.style.top="-40px"
+
+document.body.appendChild(m)
+
+let fall=setInterval(()=>{
+
+let y=m.offsetTop
+y+=speed
+m.style.top=y+"px"
+
+let px=player.offsetLeft
+let py=player.offsetTop
+
+/* va chạm */
+
+if(Math.abs(px-m.offsetLeft)<40 && Math.abs(py-y)<40){
+
+playing=false
+
+document.getElementById("music").pause()
+document.getElementById("boom").play()
+
+document.getElementById("gameover").style.display="block"
+document.getElementById("finalScore").innerText=score
+
+clearInterval(fall)
+
+}
+
+if(y>window.innerHeight){
+
+score++
+scoreEl.innerText=score
+
+m.remove()
+clearInterval(fall)
+
+/* tăng level */
+
+if(score%10==0){
+
+level++
+speed+=1
+levelEl.innerText=level
+
+}
+
+}
+
+},30)
+
+}
+
+setInterval(()=>{
+
+if(playing) createMeteor()
+
+},800)
+
+function restart(){
+
+location.reload()
+
+}
+
+</script>
+
+</body>
+</html>
